@@ -98,6 +98,22 @@
             border-color: white transparent transparent transparent;
         }
 
+        .bird-sign {
+            position: absolute;
+            top: 55px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            border: 2px solid #f43f5e; /* rose-500 */
+            color: #f43f5e;
+            font-weight: bold;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 20;
+        }
+
         #yesBtn {
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 30;
@@ -142,11 +158,12 @@
                 
                 <button id="noBtn" onclick="dodgeCursor(event)" onmouseover="dodgeCursor(event)" ontouchstart="dodgeCursor(event)" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 px-8 rounded-full shadow-md text-lg whitespace-nowrap flex flex-col items-center justify-center">
                     <span id="noText">No</span>
-                    <div id="birdContainer" class="hidden relative">
+                    <div id="birdContainer" class="hidden relative flex flex-col items-center">
                         <div id="birdSpeech" class="speech-bubble absolute -top-16 left-1/2 transform -translate-x-1/2 bg-white text-gray-800 text-xs py-1 px-3 rounded-lg shadow-sm whitespace-nowrap border border-rose-100 font-bold">
                             Don't touch me!
                         </div>
-                        <img src="https://img.icons8.com/color/96/bird.png" alt="Bird" class="w-16 h-16 object-contain animate-bounce">
+                        <img src="https://img.icons8.com/color/96/bird.png" alt="Bird" class="w-16 h-16 object-contain animate-bounce z-10 relative">
+                        <div class="bird-sign animate-bounce">NO</div>
                     </div>
                 </button>
             </div>
