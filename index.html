@@ -9,16 +9,15 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background: #ffe4e6; /* Rose 100 */
-            overflow: hidden; /* Prevent scrolling when button moves */
-            touch-action: none; /* Disable double-tap zoom globally */
+            background: #ffe4e6;
+            overflow: hidden;
+            touch-action: none;
         }
         
         .script-font {
             font-family: 'Dancing Script', cursive;
         }
 
-        /* Floating Hearts Animation Background */
         .heart-bg {
             position: absolute;
             width: 100%;
@@ -41,7 +40,6 @@
             100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
 
-        /* Card Styles */
         .glass-card {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -50,52 +48,45 @@
             z-index: 10;
         }
 
-        /* BOUNDARY BOX logic */
         #boundaryBox {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 2px dashed rgba(244, 63, 94, 0.3); /* Rose-500 low opacity */
+            border: 2px dashed rgba(244, 63, 94, 0.0); /* Hidden boundary for logic */
             border-radius: 24px;
             pointer-events: none;
             z-index: 5;
-            
-            /* DESKTOP: 16:9 Landscape Ratio */
+
             width: 90vw;
             height: calc(90vw * 9 / 16);
             max-height: 90vh;
             max-width: calc(90vh * 16 / 9);
         }
 
-        /* MOBILE: Responsive adjustment for Portrait screens */
         @media (max-width: 768px) {
             #boundaryBox {
                 width: 90vw;
-                height: 70vh; /* Use vertical height instead of forced 16:9 */
+                height: 70vh;
                 max-width: none;
                 max-height: none;
             }
         }
 
-        /* Button transition for smooth movement */
         #noBtn {
             transition: top 0.3s ease, left 0.3s ease, transform 0.2s;
             position: relative; 
             z-index: 100; 
-            /* CRITICAL FOR MOBILE: Prevents scroll/zoom delay on tap */
             touch-action: none; 
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Bird Mode Styles */
         .bird-mode {
             background-color: transparent !important;
             box-shadow: none !important;
             padding: 0 !important;
         }
-        
-        /* Speech Bubble Triangle */
+
         .speech-bubble::after {
             content: '';
             position: absolute;
@@ -106,14 +97,12 @@
             border-style: solid;
             border-color: white transparent transparent transparent;
         }
-        
-        /* Smooth growth for the Yes button */
+
         #yesBtn {
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 30;
         }
 
-        /* Confetti Canvas */
         #confetti {
             position: fixed;
             top: 0;
@@ -125,39 +114,32 @@
         }
     </style>
 </head>
+
 <body class="h-screen w-screen flex items-center justify-center selection:bg-rose-200">
 
-    <!-- Background Hearts Container -->
     <div id="bgHearts" class="heart-bg"></div>
-    
-    <!-- The Responsive Boundary Box -->
     <div id="boundaryBox"></div>
 
     <canvas id="confetti"></canvas>
 
-    <!-- Main Card -->
     <div id="mainCard" class="glass-card relative p-8 md:p-12 rounded-3xl text-center max-w-md w-full mx-4 flex flex-col items-center">
-        
-        <!-- Cute Gif/Image Area -->
+
+        <!-- Fixed Mascot Image - Switched to Emojis for reliability -->
         <div class="mb-6 h-48 w-48 bg-rose-50 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-inner relative">
-            <!-- Fixed URL: Peach and Goma Hello -->
-            <img id="mascot" src="https://media1.tenor.com/m/EqqjQkF3Zt8AAAAC/peach-goma-hello.gif" 
-                 alt="Cute Bear" 
-                 class="w-full h-full object-cover transition-opacity duration-300">
+            <div id="mascot" class="text-9xl select-none transition-transform duration-300 transform hover:scale-110 leading-none mt-2">
+                🐻
+            </div>
         </div>
 
-        <!-- Question Section -->
         <div id="questionSection">
             <h1 class="script-font text-5xl text-rose-600 mb-2">My Dearest...</h1>
             <p class="text-xl text-gray-700 font-semibold mb-8">You've stolen my heart. Will you go out with me?</p>
 
-            <!-- Buttons Container -->
             <div class="flex gap-4 justify-center items-center w-full relative h-16">
                 <button id="yesBtn" onclick="acceptProposal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform text-lg whitespace-nowrap">
                     Yes 💖
                 </button>
                 
-                <!-- Added onclick as fallback and pass event to dodgeCursor -->
                 <button id="noBtn" onclick="dodgeCursor(event)" onmouseover="dodgeCursor(event)" ontouchstart="dodgeCursor(event)" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 px-8 rounded-full shadow-md text-lg whitespace-nowrap flex flex-col items-center justify-center">
                     <span id="noText">No</span>
                     <div id="birdContainer" class="hidden relative">
@@ -170,17 +152,16 @@
             </div>
         </div>
 
-        <!-- Success Section (Hidden by default) -->
         <div id="successSection" class="hidden transform scale-90 transition-all duration-500">
             <h1 class="script-font text-5xl text-rose-600 mb-4">You just made me the happiest person alive! 💖</h1>
             <p class="text-gray-600 text-lg">I promise to cherish every moment with you.</p>
-            <p class="text-4xl mt-4">🥰💏💍</p>
+            <p class="text-4xl mt-4">💕😍🥰</p>
         </div>
 
     </div>
 
+    <!-- ---------- JS LOGIC ---------- -->
     <script>
-        // --- Variables ---
         const noBtn = document.getElementById('noBtn');
         const yesBtn = document.getElementById('yesBtn');
         const mascot = document.getElementById('mascot');
@@ -192,63 +173,46 @@
         let isAbsolute = false;
         let isBirdMode = false;
         let yesScale = 1;
-        
-        // Image Sources (DIRECT GIF LINKS ONLY)
-        const happyGif = "https://media1.tenor.com/m/EqqjQkF3Zt8AAAAC/peach-goma-hello.gif"; 
-        const successGif = "https://media1.tenor.com/m/gUiu1zyxfzYAAAAC/bear-kiss-bear-kisses.gif"; 
-        
-        // Array of sad GIFs for rejection attempts (Direct Links)
-        const sadGifs = [
-            "https://media1.tenor.com/m/bCjp7j7W1WAAAAAC/banana-cat-crying.gif",
-            "https://media1.tenor.com/m/1k6zG6yqg6MAAAAC/sad-hamster.gif",
-            "https://media1.tenor.com/m/7zK_pWwzGikAAAAC/milk-and-mocha-cry.gif",
-            "https://media1.tenor.com/m/426h56k2-c0AAAAC/sad-cat-crying.gif"
-        ];
 
-        // --- Logic to move the No Button ---
+        // Switched to Emojis to avoid broken GIF links
+        const happyEmoji = "🐻"; 
+        const successEmoji = "🥰"; 
+
+        const sadEmojis = ["😢", "😭", "💔", "😿", "🥺"];
+
         function dodgeCursor(e) {
-            // Prevent default touch behavior (double tap zoom, focus emulation)
-            if (e && e.type === 'touchstart') {
-                e.preventDefault();
-            }
+            if (e && e.type === 'touchstart') e.preventDefault();
 
-            // 0. Transform into Bird Mode if not already
             if (!isBirdMode) {
                 isBirdMode = true;
                 noBtn.classList.add('bird-mode');
                 noText.classList.add('hidden');
                 birdContainer.classList.remove('hidden');
-                
-                // Move button to body so it floats over the card
+
                 document.body.appendChild(noBtn);
                 noBtn.style.position = 'fixed';
                 isAbsolute = true;
             }
 
-            // 1. Change Text
             const texts = ["Are you sure?", "Think again!", "Really?", "Don't do this!", "Look at me!", "Please?", "I'll cry!", "Press Yes!"];
             birdSpeech.innerText = texts[Math.floor(Math.random() * texts.length)];
 
-            // 2. Measure dimensions based on Boundary Box
-            // Responsive CSS ensures this box is sized correctly for mobile or desktop
             const boundaryRect = boundaryBox.getBoundingClientRect();
-            
-            const btnWidth = 80; 
+
+            const btnWidth = 80;
             const btnHeight = 80;
-            
-            const paddingX = 20; 
-            const paddingYTop = 90; // Space for speech bubble
+
+            const paddingX = 20;
+            const paddingYTop = 90;
             const paddingYBottom = 20;
 
             const yesRect = yesBtn.getBoundingClientRect();
 
-            // 3. Calculate safe boundaries
             const minX = boundaryRect.left + paddingX;
             const maxX = boundaryRect.right - btnWidth - paddingX;
             const minY = boundaryRect.top + paddingYTop;
             const maxY = boundaryRect.bottom - btnHeight - paddingYBottom;
 
-            // 4. Generate random position with collision detection
             let randomX, randomY;
             let overlap = true;
             let attempts = 0;
@@ -258,7 +222,7 @@
                 randomY = Math.random() * (maxY - minY) + minY;
 
                 const buffer = 30;
-                
+
                 const noLeft = randomX;
                 const noRight = randomX + btnWidth;
                 const noTop = randomY;
@@ -278,58 +242,53 @@
                 attempts++;
             }
 
-            // If we couldn't find a non-overlapping spot, move randomly within bounds anyway
             if (overlap) {
                 randomX = Math.random() * (maxX - minX) + minX;
                 randomY = Math.random() * (maxY - minY) + minY;
             }
 
-            // Apply position
             noBtn.style.left = randomX + 'px';
             noBtn.style.top = randomY + 'px';
-            
-            // 5. Make Yes Button Grow (with CAP)
-            // Cap at scale 6 to prevent it from covering absolutely everything
+
             if (yesScale < 6) {
-                yesScale += 0.4; 
+                yesScale += 0.4;
                 yesBtn.style.transform = `scale(${yesScale})`;
             }
 
-            // 6. Change Image to Sad
-            mascot.src = sadGifs[Math.floor(Math.random() * sadGifs.length)];
+            // Update Emoji text instead of Image Source
+            mascot.innerText = sadEmojis[Math.floor(Math.random() * sadEmojis.length)];
         }
 
-        // --- Logic for Success ---
         function acceptProposal() {
             const questionSection = document.getElementById('questionSection');
             const successSection = document.getElementById('successSection');
 
+            // Hide the 'No' button and boundary
             boundaryBox.style.display = 'none';
-            // Hide the No button explicitly since it might be in the body tag now
-            noBtn.style.display = 'none'; 
+            noBtn.style.display = 'none';
 
             questionSection.style.display = 'none';
             successSection.classList.remove('hidden');
-            
+
             setTimeout(() => {
                 successSection.classList.remove('scale-90');
                 successSection.classList.add('scale-100');
             }, 50);
 
-            mascot.src = successGif; 
+            // Update Emoji
+            mascot.innerText = successEmoji;
             startConfetti();
         }
 
-        // --- Background Floating Hearts ---
         function createHearts() {
             const container = document.getElementById('bgHearts');
             const hearts = ['❤️', '💖', '💕', '🥰', '🌹'];
-            
+
             setInterval(() => {
                 const heart = document.createElement('div');
                 heart.classList.add('heart');
                 heart.innerText = hearts[Math.floor(Math.random() * hearts.length)];
-                
+
                 heart.style.left = Math.random() * 100 + 'vw';
                 heart.style.animationDuration = Math.random() * 3 + 4 + 's';
                 heart.style.fontSize = Math.random() * 20 + 10 + 'px';
@@ -339,7 +298,6 @@
         }
         createHearts();
 
-        // --- Confetti Logic ---
         function startConfetti() {
             const canvas = document.getElementById('confetti');
             const ctx = canvas.getContext('2d');
@@ -347,16 +305,15 @@
             canvas.height = window.innerHeight;
 
             const particles = [];
-            const particleCount = 150;
+            const count = 150;
 
-            for (let i = 0; i < particleCount; i++) {
+            for (let i = 0; i < count; i++) {
                 particles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height - canvas.height,
                     speed: Math.random() * 3 + 2,
                     color: `hsl(${Math.random() * 360}, 100%, 50%)`,
-                    size: Math.random() * 5 + 2,
-                    spin: Math.random() * 0.2 - 0.1
+                    size: Math.random() * 5 + 2
                 });
             }
 
@@ -365,15 +322,19 @@
                 particles.forEach((p) => {
                     p.y += p.speed;
                     p.x += Math.sin(p.y * 0.01) * 2;
+
                     if (p.y > canvas.height) {
                         p.y = -10;
                         p.x = Math.random() * canvas.width;
                     }
+
                     ctx.fillStyle = p.color;
                     ctx.fillRect(p.x, p.y, p.size, p.size);
                 });
+
                 requestAnimationFrame(animate);
             }
+
             animate();
         }
 
