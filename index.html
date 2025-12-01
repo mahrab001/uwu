@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Question</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #ffe4e6; /* Rose 100 */
+            overflow: hidden; /* Prevent scrolling when button moves */
+        }
+        
+        .script-font {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* Floating Hearts Animation Background */
+        .heart-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 20px;
+            color: rgba(255, 182, 193, 0.6);
+            animation: float 6s linear infinite;
+            bottom: -20px;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Card Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.3);
+        }
+
+        /* Button transition for smooth movement */
+        #noBtn {
+            transition: all 0.2s ease;
+            position: relative; 
+            z-index: 20;
+        }
+        
+        /* Smooth growth for the Yes button */
+        #yesBtn {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 30; /* Ensure it stays on top as it grows */
+        }
+
+        /* Confetti Canvas */
+        #confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center selection:bg-rose-200">
+
+    <!-- Background Hearts Container -->
+    <div id="bgHearts" class="heart-bg"></div>
+    <canvas id="confetti"></canvas>
+
+    <!-- Main Card -->
+    <div id="mainCard" class="glass-card relative z-10 p-8 md:p-12 rounded-3xl text-center max-w-md w-full mx-4 flex flex-col items-center">
+        
+        <!-- Cute Gif/Image Area -->
+        <div class="mb-6 h-48 w-48 bg-rose-50 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-inner relative">
+            <!-- Default Cute Image (Using i.giphy.com for better reliability) -->
+            <img id="mascot" src="https://i.giphy.com/media/FTGah7Mx3rf0SNkFRO/giphy.gif" 
+                 alt="Cute Bear" 
+                 class="w-full h-full object-cover transition-opacity duration-300"
+                 onerror="this.onerror=null; this.src='https://placekitten.com/200/200'">
+        </div>
+
+        <!-- Question Section -->
+        <div id="questionSection">
+            <h1 class="script-font text-5xl text-rose-600 mb-2">My Dearest...</h1>
+            <p class="text-xl text-gray-700 font-semibold mb-8">You've stolen my heart. Will you go out with me?</p>
+
+            <!-- Buttons Container -->
+            <div class="flex gap-4 justify-center items-center w-full relative h-16">
+                <button id="yesBtn" onclick="acceptProposal()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform text-lg whitespace-nowrap">
+                    Yes 💖
+                </button>
+                
+                <button id="noBtn" onmouseover="dodgeCursor()" ontouchstart="dodgeCursor()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 px-8 rounded-full shadow-md text-lg whitespace-nowrap">
+                    No
+                </button>
+            </div>
+        </div>
+
+        <!-- Success Section (Hidden by default) -->
+        <div id="successSection" class="hidden transform scale-90 transition-all duration-500">
+            <h1 class="script-font text-5xl text-rose-600 mb-4">You just made me the happiest person alive! 💖</h1>
+            <p class="text-gray-600 text-lg">I promise to cherish every moment with you.</p>
+            <p class="text-4xl mt-4">🥰💏💍</p>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Variables ---
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const mascot = document.getElementById('mascot');
+        let isAbsolute = false;
+        let yesScale = 1;
+        
+        // Image Sources (Using i.giphy.com direct CDN links)
+        // Cute bear asking
+        const happyGif = "https://i.giphy.com/media/FTGah7Mx3rf0SNkFRO/giphy.gif"; 
+        // Excited bear/hearts
+        const successGif = "https://i.giphy.com/media/26BRv0ThflsHCqDrG/giphy.gif"; 
+        
+        // Array of sad GIFs for rejection attempts
+        const sadGifs = [
+            "https://i.giphy.com/media/OPU6pzx8CVo6g/giphy.gif", // Crying Cat
+            "https://i.giphy.com/media/d2lcHJPG5BT8s/giphy.gif", // Crying Dawson
+            "https://i.giphy.com/media/ISOckXUybVfQ4/giphy.gif", // Sad Spongebob
+            "https://i.giphy.com/media/Q6WPVzFU8LcBWWgQE1/giphy.gif", // Sad Puss in Boots
+            "https://i.giphy.com/media/7SF5scGB2AFrgsXP63/giphy.gif" // Crying man
+        ];
+
+        // --- Logic to move the No Button ---
+        function dodgeCursor() {
+            // 1. Move the button
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            const btnWidth = noBtn.offsetWidth;
+            const btnHeight = noBtn.offsetHeight;
+            const padding = 20;
+
+            const randomX = Math.random() * (windowWidth - btnWidth - padding * 2) + padding;
+            const randomY = Math.random() * (windowHeight - btnHeight - padding * 2) + padding;
+
+            if (!isAbsolute) {
+                noBtn.style.position = 'fixed';
+                isAbsolute = true;
+            }
+
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
+            
+            // 2. Change Text to be persuasive
+            const texts = ["Are you sure?", "Think again!", "Really?", "Don't do this!", "Look at me!", "Please?", "I'll cry!", "Press Yes!"];
+            const randomText = texts[Math.floor(Math.random() * texts.length)];
+            noBtn.innerText = randomText;
+
+            // 3. Make Yes Button Grow
+            yesScale += 0.4; // Increase scale by 0.4 each time
+            yesBtn.style.transform = `scale(${yesScale})`;
+
+            // 4. Change Image to Sad
+            const randomSadGif = sadGifs[Math.floor(Math.random() * sadGifs.length)];
+            mascot.src = randomSadGif;
+        }
+
+        // --- Logic for Success ---
+        function acceptProposal() {
+            const questionSection = document.getElementById('questionSection');
+            const successSection = document.getElementById('successSection');
+
+            // Switch content
+            questionSection.style.display = 'none';
+            successSection.classList.remove('hidden');
+            
+            setTimeout(() => {
+                successSection.classList.remove('scale-90');
+                successSection.classList.add('scale-100');
+            }, 50);
+
+            // Change image to excited/love
+            mascot.src = successGif; 
+
+            // Start Confetti
+            startConfetti();
+        }
+
+        // --- Background Floating Hearts ---
+        function createHearts() {
+            const container = document.getElementById('bgHearts');
+            const hearts = ['❤️', '💖', '💕', '🥰', '🌹'];
+            
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+                
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = Math.random() * 3 + 4 + 's';
+                heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+                
+                container.appendChild(heart);
+
+                setTimeout(() => {
+                    heart.remove();
+                }, 7000);
+            }, 300);
+        }
+        
+        createHearts();
+
+        // --- Confetti Logic (Canvas) ---
+        function startConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const particleCount = 150;
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    speed: Math.random() * 3 + 2,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    size: Math.random() * 5 + 2,
+                    spin: Math.random() * 0.2 - 0.1
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach((p) => {
+                    p.y += p.speed;
+                    p.x += Math.sin(p.y * 0.01) * 2;
+                    
+                    if (p.y > canvas.height) {
+                        p.y = -10;
+                        p.x = Math.random() * canvas.width;
+                    }
+
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                });
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('confetti');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
